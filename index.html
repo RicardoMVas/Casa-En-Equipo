@@ -250,22 +250,22 @@
 <div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ============================================================
-   STORE  — toda lectura/escritura pasa por acá.
-   En Fase 2 reemplazamos esto por Supabase sin tocar el resto.
+   SUPABASE — estado compartido + cache local de respaldo
 ============================================================ */
-const KEY = "casa-en-equipo-v1";
-const memFallback = {}; // por si localStorage no está disponible (preview)
-const store = {
-  _read(){
-    try{ const v = localStorage.getItem(KEY); return v?JSON.parse(v):null; }
-    catch(e){ return memFallback[KEY]||null; }
-  },
-  _write(data){
-    const s = JSON.stringify(data);
-    try{ localStorage.setItem(KEY,s); }catch(e){ memFallback[KEY]=JSON.parse(s); }
-  }
+const SUPA_URL = "https://vpnhfrjpjtcwucovkxos.supabase.co";
+const SUPA_KEY = "sb_publishable_xkX7Vt-ZTckuSV0A1_0XCQ_Ysf775p-";
+let supa = null;
+try{ supa = window.supabase.createClient(SUPA_URL, SUPA_KEY); }catch(e){ console.log("Supabase no cargó:", e); }
+
+const KEY = "casa-en-equipo-v1";       // cache del estado compartido
+const DEVKEY = "casa-en-equipo-dev";   // datos de ESTE celu (no se comparten)
+const memFallback = {};
+const cache = {
+  read(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return memFallback[k]||null; } },
+  write(k,d){ const s=JSON.stringify(d); try{ localStorage.setItem(k,s); }catch(e){ memFallback[k]=JSON.parse(s); } }
 };
 
 /* ============================================================
@@ -313,8 +313,41 @@ function defaultState(){
   };
 }
 
-let S = store._read() || defaultState();
-function save(){ store._write(S); }
+// Estado compartido (se sincroniza entre celus). Arranca del cache para abrir rápido.
+let S = cache.read(KEY) || defaultState();
+// Datos de ESTE dispositivo (no se comparten): de quién es el celu y su suscripción push
+let D = cache.read(DEVKEY) || { thisDevice:null, pushSub:null };
+function saveDevice(){ cache.write(DEVKEY, D); }
+
+// migración: si el estado viejo traía datos de dispositivo, moverlos a D
+if(S.thisDevice && !D.thisDevice) D.thisDevice = S.thisDevice;
+if(S.pushSub && !D.pushSub) D.pushSub = S.pushSub;
+if(S.thisDevice || S.pushSub){ delete S.thisDevice; delete S.pushSub; saveDevice(); }
+
+let lastPushedJSON = "";
+let saveTimer = null;
+function save(){
+  cache.write(KEY, S);                       // instantáneo + offline
+  if(!supa) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(pushState, 500);    // a la nube con un respiro
+}
+async function pushState(){
+  if(!supa) return;
+  try{
+    lastPushedJSON = JSON.stringify(S);
+    await supa.from("app_state").upsert({ id:1, data:S, updated_at:new Date().toISOString() });
+  }catch(e){ console.log("No se pudo guardar en la nube:", e.message); }
+}
+async function saveSubscription(){
+  if(!supa || !D.pushSub || !D.thisDevice) return;
+  try{
+    await supa.from("subscriptions").upsert(
+      { endpoint:D.pushSub.endpoint, person_id:D.thisDevice, sub:D.pushSub },
+      { onConflict:"endpoint" }
+    );
+  }catch(e){ console.log("No se pudo guardar la suscripción:", e.message); }
+}
 
 /* ============================================================
    HELPERS DE FECHA / ROTACIÓN
@@ -777,17 +810,17 @@ function renderNotif(){
   }
 
   const perm = Notification.permission;
-  const mine = S.thisDevice ? S.people.find(p=>p.id===S.thisDevice) : null;
+  const mine = D.thisDevice ? S.people.find(p=>p.id===D.thisDevice) : null;
 
   // elegir de quién es el celu
   let who = "<div style='font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px'>¿De quién es este celular?</div>"+
     "<div style='display:flex;gap:8px;margin-bottom:14px'>"+S.people.map(p=>
-      "<button onclick=\"setDevice('"+p.id+"')\" style='flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:12px;border:2px solid "+(S.thisDevice===p.id?p.color:"var(--line)")+";background:"+(S.thisDevice===p.id?p.color+"14":"var(--surface)")+";font-weight:600'>"+
+      "<button onclick=\"setDevice('"+p.id+"')\" style='flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:12px;border:2px solid "+(D.thisDevice===p.id?p.color:"var(--line)")+";background:"+(D.thisDevice===p.id?p.color+"14":"var(--surface)")+";font-weight:600'>"+
       "<span style='width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:"+p.color+";color:#fff'>"+p.emoji+"</span>"+p.name.split(" ")[0]+"</button>"
     ).join("")+"</div>";
 
   let action;
-  if(perm==="granted" && S.pushSub){
+  if(perm==="granted" && D.pushSub){
     action = "<div style='display:flex;align-items:center;gap:8px;color:var(--done);font-weight:600;font-size:14px;margin-bottom:12px'>✓ Notificaciones activadas"+(mine?" para "+mine.name.split(" ")[0]:"")+"</div>"+
       "<button class='btn ghost' onclick='testNotif()' style='margin-top:0'>Probar notificación</button>";
   } else if(perm==="denied"){
@@ -798,10 +831,10 @@ function renderNotif(){
   el.innerHTML = who + action;
 }
 
-function setDevice(id){ S.thisDevice=id; save(); renderNotif(); }
+function setDevice(id){ D.thisDevice=id; saveDevice(); if(D.pushSub) saveSubscription(); renderNotif(); }
 
 async function enableNotifs(){
-  if(!S.thisDevice){ toast("Primero elegí de quién es el celu"); return; }
+  if(!D.thisDevice){ toast("Primero elegí de quién es el celu"); return; }
   try{
     const perm = await Notification.requestPermission();
     if(perm!=="granted"){ toast("No diste permiso"); renderNotif(); return; }
@@ -811,8 +844,9 @@ async function enableNotifs(){
       userVisibleOnly:true,
       applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC)
     });
-    S.pushSub = sub.toJSON();   // Paso 2: esto se sube a Supabase
-    save();
+    D.pushSub = sub.toJSON();
+    saveDevice();
+    await saveSubscription();   // queda en Supabase para el aviso de las 18
     toast("¡Notificaciones activadas! 🔔");
     renderNotif();
   }catch(e){ console.log(e); toast("No se pudo activar: "+e.message); }
@@ -837,7 +871,46 @@ async function testNotif(){
 registerSW();
 
 function renderAll(){ renderHeader(); renderHoy(); renderSemana(); renderRecetas(); renderBalance(); }
-renderAll();
+
+async function pullState(){
+  if(!supa) return;
+  try{
+    const { data, error } = await supa.from("app_state").select("data").eq("id",1).single();
+    if(error) throw error;
+    if(data && data.data && Object.keys(data.data).length){
+      S = data.data;                 // lo de la nube manda
+      cache.write(KEY, S);
+    } else {
+      await pushState();             // base vacía -> la siembro con lo que tengo
+    }
+  }catch(e){ console.log("No se pudo leer de la nube:", e.message); }
+}
+
+function subscribeRealtime(){
+  if(!supa) return;
+  supa.channel("app_state_ch")
+    .on("postgres_changes", { event:"*", schema:"public", table:"app_state" }, (payload)=>{
+      const incoming = payload.new && payload.new.data;
+      if(!incoming) return;
+      const incJSON = JSON.stringify(incoming);
+      if(incJSON === lastPushedJSON) return;      // es mi propio cambio, ignoro
+      if(incJSON === JSON.stringify(S)) return;   // ya lo tengo
+      S = incoming;
+      cache.write(KEY, S);
+      Object.keys(manualToday).forEach(k=>delete manualToday[k]);
+      renderAll();
+    })
+    .subscribe();
+}
+
+async function init(){
+  renderAll();             // pinta ya con el cache (abre al instante)
+  await pullState();       // trae lo último de la nube
+  renderAll();
+  if(D.pushSub && D.thisDevice) saveSubscription();  // re-asegura la suscripción en la base
+  subscribeRealtime();     // escucha al otro celu en vivo
+}
+init();
 </script>
 </body>
 </html>
