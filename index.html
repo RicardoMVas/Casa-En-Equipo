@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#f4f2ee" />
+<title>Casa en Equipo</title>
+<link rel="manifest" href="/manifest.json" />
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Casa" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ric:#1f7a8c;        /* color persona A */
+    --majo:#c95d8a;       /* color persona B */
+    --paper:#f4f2ee;
+    --surface:#ffffff;
+    --surface-2:#fbfaf7;
+    --ink:#2b2724;
+    --muted:#8a8178;
+    --line:#e7e3db;
+    --done:#5a9e6f;
+    --gold:#e0a03c;
+    --shadow:0 1px 2px rgba(43,39,36,.05),0 8px 24px rgba(43,39,36,.06);
+    --radius:18px;
+    --display:"Fraunces",Georgia,serif;
+    --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--sans);
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:84px;
+    max-width:520px;
+    margin:0 auto;
+    min-height:100vh;
+  }
+  h1,h2,h3{margin:0;font-family:var(--display);font-weight:600;letter-spacing:-.01em}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font-family:inherit;font-size:16px}
+
+  /* ===== HEADER ===== */
+  header{padding:22px 20px 12px}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .greeting{font-size:30px;line-height:1.05;margin-top:4px}
+  .greeting .name{font-style:italic}
+  .date-row{display:flex;align-items:baseline;gap:8px;margin-top:6px;color:var(--muted);font-size:14px;text-transform:capitalize}
+
+  /* ===== VIEWS ===== */
+  main{padding:0 20px}
+  .view{display:none;animation:fade .25s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .section-title{font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:22px 2px 10px}
+
+  /* ===== TASK CARD ===== */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .task{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .task:last-child{border-bottom:none}
+  .task-check{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:2.5px solid var(--line);display:grid;place-items:center;transition:.18s;background:var(--surface)}
+  .task-check svg{width:16px;height:16px;opacity:0;transform:scale(.5);transition:.18s}
+  .task.done .task-check{background:var(--done);border-color:var(--done)}
+  .task.done .task-check svg{opacity:1;transform:scale(1)}
+  .task-body{flex:1;min-width:0}
+  .task-name{font-weight:600;font-size:16px}
+  .task.done .task-name{text-decoration:line-through;color:var(--muted)}
+  .task-sub{font-size:13px;color:var(--muted);margin-top:1px}
+  .who{flex:0 0 auto}
+  .avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:17px;color:#fff;font-weight:700;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--line)}
+  .avatar.swap{position:relative}
+  .avatar.swap::after{content:"";position:absolute;inset:0;border-radius:50%}
+  .pill-pts{font-size:11px;font-weight:700;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);padding:1px 7px;border-radius:20px;margin-left:6px}
+
+  /* ===== RECIPE CARD ===== */
+  .recipe-hero{margin-top:4px;padding:18px;border-radius:var(--radius);background:linear-gradient(135deg,#2b3a3e,#1f7a8c);color:#fff;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .recipe-hero .label{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.85;font-weight:600}
+  .recipe-hero h2{font-size:24px;margin-top:6px;color:#fff}
+  .recipe-hero .chef{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;opacity:.95}
+  .recipe-hero .change{margin-top:14px;font-size:13px;font-weight:600;background:rgba(255,255,255,.16);padding:8px 14px;border-radius:30px;display:inline-flex;gap:6px;align-items:center;backdrop-filter:blur(4px)}
+  .recipe-hero .blob{position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.06)}
+
+  /* ===== WEEK GRID ===== */
+  .week{display:flex;flex-direction:column;gap:10px}
+  .day-row{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow)}
+  .day-row.today{border-color:var(--ink);border-width:2px}
+  .day-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .day-name{font-weight:600;text-transform:capitalize}
+  .day-name small{color:var(--muted);font-weight:400;margin-left:6px}
+  .day-tag{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:20px}
+  .tag-finde{background:#fbeede;color:var(--gold)}
+  .mini-tasks{display:flex;flex-wrap:wrap;gap:6px}
+  .mini{display:inline-flex;align-items:center;gap:5px;font-size:12px;background:var(--surface-2);border:1px solid var(--line);padding:3px 8px 3px 4px;border-radius:20px;color:var(--ink)}
+  .mini .dot{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;color:#fff;font-weight:700}
+  .mini.done{opacity:.5}
+
+  /* ===== BALANCE / SEESAW ===== */
+  .seesaw-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 18px 10px;overflow:hidden}
+  .seesaw{height:150px;position:relative}
+  .balance-verdict{text-align:center;font-family:var(--display);font-size:19px;margin-top:6px}
+  .balance-verdict span{font-style:italic}
+  .score-row{display:flex;gap:12px;margin-top:14px}
+  .score{flex:1;border-radius:14px;padding:14px;border:1px solid var(--line)}
+  .score .who-name{display:flex;align-items:center;gap:8px;font-weight:600}
+  .score .pts{font-family:var(--display);font-size:34px;font-weight:600;line-height:1;margin-top:8px}
+  .score .pts small{font-size:14px;color:var(--muted);font-family:var(--sans);font-weight:500}
+  .breakdown{margin-top:6px}
+  .breakdown-item{display:flex;justify-content:space-between;font-size:13px;padding:9px 2px;border-bottom:1px solid var(--line);color:var(--muted)}
+  .breakdown-item b{color:var(--ink);font-weight:600}
+
+  /* ===== RECETAS ===== */
+  .recipe-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}
+  .recipe-item:last-child{border-bottom:none}
+  .recipe-emoji{width:42px;height:42px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-size:20px;flex:0 0 auto}
+  .recipe-info{flex:1;min-width:0}
+  .recipe-info .nm{font-weight:600}
+  .recipe-info .meta{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .icon-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);display:grid;place-items:center;background:var(--surface);color:var(--muted)}
+
+  /* ===== BUTTONS ===== */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;font-weight:600;font-size:15px;background:var(--ink);color:#fff;margin-top:14px}
+  .btn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+  .btn.sm{width:auto;padding:9px 16px;font-size:14px}
+
+  /* ===== AJUSTES ===== */
+  .field{margin-top:14px}
+  .field label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
+  .field input,.field select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+  .color-dots{display:flex;gap:10px;margin-top:6px}
+  .cdot{width:32px;height:32px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+  .cdot.sel{box-shadow:0 0 0 2px var(--ink)}
+  .weight-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+  .stepper{display:flex;align-items:center;gap:4px}
+  .stepper button{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);font-size:18px;font-weight:600;background:var(--surface)}
+  .stepper .v{width:30px;text-align:center;font-weight:700}
+
+  /* ===== NAV ===== */
+  nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:50}
+  .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--muted);font-size:11px;font-weight:600}
+  .nav-btn svg{width:22px;height:22px}
+  .nav-btn.active{color:var(--ink)}
+
+  /* ===== MODAL ===== */
+  .modal-bg{position:fixed;inset:0;background:rgba(43,39,36,.45);display:none;align-items:flex-end;justify-content:center;z-index:100;animation:fade .2s}
+  .modal-bg.open{display:flex}
+  .modal{background:var(--paper);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto;animation:slideup .28s cubic-bezier(.2,.8,.2,1)}
+  @keyframes slideup{from{transform:translateY(100%)}to{transform:none}}
+  .modal h3{font-size:20px;margin-bottom:4px}
+  .modal-sub{color:var(--muted);font-size:14px;margin-bottom:6px}
+  .pick-list{margin-top:10px}
+  .pick{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:13px;margin-bottom:8px;background:var(--surface)}
+  .pick.sel{border-color:var(--ink);border-width:2px}
+  .empty{text-align:center;color:var(--muted);padding:30px 10px;font-size:14px}
+  textarea{width:100%;min-height:70px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;resize:vertical}
+
+  .toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:30px;font-size:14px;font-weight:500;opacity:0;transition:.3s;z-index:200;pointer-events:none;box-shadow:var(--shadow)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Casa en equipo</div>
+  <h1 class="greeting" id="greeting">Hola</h1>
+  <div class="date-row" id="dateRow"></div>
+</header>
+
+<main>
+  <!-- ===== HOY ===== -->
+  <section class="view active" id="view-hoy">
+    <div id="recipeHero"></div>
+    <div class="section-title">Tareas de hoy</div>
+    <div class="card" id="todayTasks"></div>
+  </section>
+
+  <!-- ===== SEMANA ===== -->
+  <section class="view" id="view-semana">
+    <div class="section-title" id="weekLabel">Esta semana</div>
+    <div class="week" id="weekGrid"></div>
+  </section>
+
+  <!-- ===== RECETAS ===== -->
+  <section class="view" id="view-recetas">
+    <div class="section-title">Recetario</div>
+    <div class="card" id="recipeList"></div>
+    <button class="btn" id="addRecipeBtn">+ Agregar receta</button>
+  </section>
+
+  <!-- ===== BALANCE ===== -->
+  <section class="view" id="view-balance">
+    <div class="section-title">El balance de la semana</div>
+    <div class="seesaw-wrap">
+      <div class="seesaw" id="seesaw"></div>
+      <div class="balance-verdict" id="verdict"></div>
+    </div>
+    <div class="score-row" id="scoreRow"></div>
+    <div class="section-title">Detalle</div>
+    <div class="card" id="breakdown"></div>
+  </section>
+
+  <!-- ===== AJUSTES ===== -->
+  <section class="view" id="view-ajustes">
+    <div class="section-title">Las personas</div>
+    <div class="card" style="padding:16px" id="peopleCfg"></div>
+    <div class="section-title">¿Quién arranca cocinando?</div>
+    <div class="card" style="padding:16px" id="startCfg"></div>
+    <div class="section-title">Puntos por tarea</div>
+    <div class="card" style="padding:6px 16px" id="weightsCfg"></div>
+
+    <div class="section-title">Notificaciones</div>
+    <div class="card" style="padding:16px" id="notifCfg"></div>
+
+    <button class="btn ghost" id="resetBtn" style="margin-top:22px;color:#b54b4b">Borrar todo y empezar de cero</button>
+    <p style="text-align:center;color:var(--muted);font-size:12px;margin-top:18px">Fase 2 · en construcción 🚧</p>
+  </section>
+</main>
+
+<nav id="nav">
+  <button class="nav-btn active" data-view="hoy">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    Hoy
+  </button>
+  <button class="nav-btn" data-view="semana">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+    Semana
+  </button>
+  <button class="nav-btn" data-view="recetas">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M6 3v8a3 3 0 003 3M18 3v18"/><path d="M6 7h0"/></svg>
+    Recetas
+  </button>
+  <button class="nav-btn" data-view="balance">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 7h18M6 7l-3 6a3 3 0 006 0L6 7zm12 0l-3 6a3 3 0 006 0l-3-6z"/></svg>
+    Balance
+  </button>
+  <button class="nav-btn" data-view="ajustes">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-2.82 1.17V21a2 2 0 11-4 0v-.09A1.65 1.65 0 007 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.14.31.22.65.22 1z"/></svg>
+    Ajustes
+  </button>
+</nav>
+
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   STORE  — toda lectura/escritura pasa por acá.
+   En Fase 2 reemplazamos esto por Supabase sin tocar el resto.
+============================================================ */
+const KEY = "casa-en-equipo-v1";
+const memFallback = {}; // por si localStorage no está disponible (preview)
+const store = {
+  _read(){
+    try{ const v = localStorage.getItem(KEY); return v?JSON.parse(v):null; }
+    catch(e){ return memFallback[KEY]||null; }
+  },
+  _write(data){
+    const s = JSON.stringify(data);
+    try{ localStorage.setItem(KEY,s); }catch(e){ memFallback[KEY]=JSON.parse(s); }
+  }
+};
+
+/* ============================================================
+   DATOS POR DEFECTO
+============================================================ */
+const SEED_RECIPES = [
+  {id:"r1", emoji:"🥩", nombre:"Bife con ensalada y papa", min:25, ing:"Bife de vaca o pollo (200 g aprox.), zanahoria rallada, papa chica en cubos", pasos:"Cocinar el bife a la plancha. Acompañar con ensalada de zanahoria rallada y papa en cubos."},
+  {id:"r2", emoji:"🍔", nombre:"Hamburguesas con puré de calabacín", min:30, ing:"Dos hamburguesas de carne o una costeleta de cerdo, calabacín, un poco de zanahoria rallada", pasos:"Sellar las hamburguesas o la costeleta. Servir con puré de calabacín y ensalada de zanahoria."},
+  {id:"r3", emoji:"🍗", nombre:"Pollo con puré y zanahoria", min:30, ing:"Bife de pollo o dos hamburguesas, calabacín, zanahoria rallada", pasos:"Cocinar el pollo (o las hamburguesas). Acompañar con puré de calabacín y ensalada de zanahoria."},
+  {id:"r4", emoji:"🍖", nombre:"Costeleta con verduras al horno", min:45, ing:"Una costeleta de cerdo o de vaca, una rodaja de calabacín, un zapallito, una papa chica", pasos:"Hornear las verduras hasta dorar. Cocinar la costeleta a la plancha o al horno."},
+  {id:"r5", emoji:"🍗", nombre:"Pollo con verduras al horno", min:45, ing:"Bife de pollo o dos costeletas de cerdo, una rodaja de calabacín, un zapallito, una papa mediana", pasos:"Hornear las verduras. Cocinar el pollo o las costeletas."},
+  {id:"r6", emoji:"🍳", nombre:"Revuelto de verduras con huevo", min:25, ing:"Cebolla, un poco de pimiento, una berenjena grande o dos zapallitos o brócoli, un huevo, un poco de arroz", pasos:"Saltear las verduras, agregar el huevo y revolver. Servir con un poco de arroz."},
+  {id:"r7", emoji:"🥩", nombre:"Milanesa con ensalada de repollo", min:30, ing:"Milanesa de vaca chica, repollo, zanahoria rallada", pasos:"Hacer la milanesa al horno o frita. Acompañar con ensalada de repollo y zanahoria."},
+  {id:"r8", emoji:"🍕", nombre:"Pizza a elección", min:15, ing:"Tres porciones de pizza a elección", pasos:"Calentar y servir."},
+  {id:"r9", emoji:"🍲", nombre:"Guiso de arroz", min:45, ing:"Media cebolla, medio pimiento, una zanahoria, tomate en cubos, carne en cubos, media taza de arroz en crudo", pasos:"Rehogar las verduras y la carne, agregar el arroz y caldo, cocinar hasta que el arroz esté listo."},
+  {id:"r10", emoji:"🥩", nombre:"Carne asada con ensalada", min:25, ing:"Carne magra, abundante ensalada a elección", pasos:"Asar la carne a la plancha o parrilla. Acompañar con bastante ensalada."},
+  {id:"r11", emoji:"🌯", nombre:"Fajitas con queso y jamón", min:15, ing:"Dos fajitas, queso, jamón, tomate, aceitunas", pasos:"Armar las fajitas con el relleno y calentar."},
+  {id:"r12", emoji:"🥩", nombre:"Bife con tomate y chauchas", min:25, ing:"Bife de vaca o pollo, tomate, chauchas o brócoli o repollo", pasos:"Cocinar el bife. Acompañar con ensalada de tomate y chauchas (o brócoli o repollo)."},
+  {id:"r13", emoji:"🍖", nombre:"Costeleta con tomate y lechuga", min:25, ing:"Costeleta de vaca, tomate, lechuga o repollo", pasos:"Cocinar la costeleta. Servir con ensalada de tomate y lechuga o repollo."},
+  {id:"r14", emoji:"🍖", nombre:"Costeleta grande con ensalada", min:25, ing:"Costeleta de vaca grande, tomate, lechuga o repollo", pasos:"Cocinar la costeleta. Acompañar con ensalada de tomate y lechuga o repollo."},
+  {id:"r15", emoji:"🥧", nombre:"Tarta de verdura y choclo", min:50, ing:"Una masa, dos cebollas, un pimiento, espinaca o cinco zapallitos, una lata de choclo, dos huevos, queso cremoso", pasos:"Saltear las verduras y mezclar con huevo. Rellenar la masa, cubrir con choclo y queso, hornear y cortar en 8 (rinde 2 porciones)."},
+  {id:"r16", emoji:"🥧", nombre:"Tarta con milanesa", min:50, ing:"Dos porciones de tarta, milanesa de vaca o pollo", pasos:"Servir dos porciones de tarta con una milanesa."},
+  {id:"r17", emoji:"🥩", nombre:"Bife con puré de calabacín", min:25, ing:"Bife de vaca o pollo, calabacín", pasos:"Cocinar el bife. Acompañar con puré de calabacín."},
+  {id:"r18", emoji:"🥩", nombre:"Bife con puré y tomate", min:25, ing:"Bife de vaca o pollo, calabacín, un tomate", pasos:"Cocinar el bife. Servir con puré de calabacín y un tomate."},
+  {id:"r19", emoji:"🍗", nombre:"Pollo con ensalada de lechuga", min:25, ing:"Bife de pollo, lechuga o repollo, zanahoria rallada", pasos:"Cocinar el pollo. Acompañar con ensalada de lechuga o repollo y zanahoria."},
+  {id:"r20", emoji:"🍗", nombre:"Pollo con ensalada y papa", min:30, ing:"Bife de pollo, lechuga o repollo, zanahoria rallada, una papa chica", pasos:"Cocinar el pollo. Servir con ensalada y una papa chica."},
+  {id:"r21", emoji:"🍕", nombre:"Pizza", min:15, ing:"Tres porciones de pizza", pasos:"Calentar y servir."},
+  {id:"r22", emoji:"🍗", nombre:"Salteado de pollo con fideos", min:25, ing:"Media cebolla, un poco de pimiento, berenjena o zapallito o brócoli, dos cucharadas de choclo, tomate en cubos, pollo en tiritas, un poco de fideos", pasos:"Saltear el pollo y las verduras, sumar el choclo y el tomate, mezclar con los fideos."},
+  {id:"r23", emoji:"🍝", nombre:"Pasta con salsa o asado", min:25, ing:"Pasta con salsa a elección, o carne asada con ensalada a elección", pasos:"Hervir la pasta y servir con salsa; o asar la carne y acompañar con ensalada."},
+  {id:"r24", emoji:"🥗", nombre:"Ensalada con costeleta", min:20, ing:"Ensalada a elección, una costeleta de vaca o de cerdo", pasos:"Cocinar la costeleta. Acompañar con abundante ensalada a elección."}
+];
+
+function defaultState(){
+  return {
+    people:[
+      {id:"a", name:"Ricardo", color:"#1f7a8c", emoji:"🧉"},
+      {id:"b", name:"María José", color:"#c95d8a", emoji:"🌸"}
+    ],
+    whoStarts:"a",
+    startMonday:"2026-06-22", // lunes ancla para la rotación
+    weights:{cocinar:3, platos:2, pisos:2, sala:2, cocina:3, bano:3, habitacion:2},
+    recipes:SEED_RECIPES.slice(),
+    recipePlan:{},     // "YYYY-MM-DD" -> recipeId
+    completions:[]     // {period, key, person, points, ts}
+  };
+}
+
+let S = store._read() || defaultState();
+function save(){ store._write(S); }
+
+/* ============================================================
+   HELPERS DE FECHA / ROTACIÓN
+============================================================ */
+const DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const COLORS = ["#1f7a8c","#c95d8a","#5a9e6f","#d98b3a","#7a6fc9","#c14b4b"];
+
+function ymd(d){ return d.toISOString().slice(0,10); }
+function parseYmd(s){ const [y,m,da]=s.split("-").map(Number); return new Date(y,m-1,da); }
+function todayDate(){ const n=new Date(); return new Date(n.getFullYear(),n.getMonth(),n.getDate()); }
+function dayDiff(a,b){ return Math.round((a-b)/86400000); }
+
+function dayIndex(date){ // días desde el lunes ancla
+  return dayDiff(date, parseYmd(S.startMonday));
+}
+function weekIndex(date){ // semana relativa al ancla
+  return Math.floor(dayIndex(date)/7);
+}
+function weekId(date){
+  const w = weekIndex(date);
+  return "W"+w;
+}
+function startIdx(){ return S.people.findIndex(p=>p.id===S.whoStarts); }
+function personByIdx(i){ return S.people[((i%2)+2)%2]; }
+
+// Asignaciones del día
+function cookIdx(date){ return (startIdx() + dayIndex(date)) % 2; }
+function assignFor(date, key){
+  const ci = ((cookIdx(date))%2+2)%2;
+  const oi = 1-ci;
+  const wk = ((weekIndex(date))%2+2)%2;
+  switch(key){
+    case "cocinar": return ci;
+    case "platos":  return oi;                // el que no cocina, lava
+    case "pisos":   return (ci + wk) % 2;     // se turna aparte, semana a semana
+    // cuartos del finde: 2 y 2, se swapean por semana
+    case "sala":       return (0 + wk) % 2;
+    case "bano":       return (0 + wk) % 2;
+    case "cocina":     return (1 + wk) % 2;
+    case "habitacion": return (1 + wk) % 2;
+    default: return ci;
+  }
+}
+
+const TASK_LABELS = {
+  cocinar:"Cocinar", platos:"Lavar los platos", pisos:"Barrer y pasar pisos",
+  sala:"Limpiar la sala", cocina:"Limpiar la cocina", bano:"Limpiar el baño", habitacion:"Limpiar la habitación"
+};
+const TASK_EMOJI = {cocinar:"🍳", platos:"🍽️", pisos:"🧹", sala:"🛋️", cocina:"🚰", bano:"🚿", habitacion:"🛏️"};
+const WEEKDAY_TASKS = ["cocinar","platos","pisos"];
+const WEEKEND_ROOMS = ["sala","cocina","bano","habitacion"];
+
+function tasksForDate(date){
+  const dow = date.getDay(); // 0 dom ... 6 sab
+  const isWeekend = (dow===0 || dow===6);
+  let list = WEEKDAY_TASKS.slice();
+  if(isWeekend) list = list.concat(WEEKEND_ROOMS);
+  return list;
+}
+
+// período de una tarea (diaria -> fecha; cuarto de finde -> semana)
+function periodFor(date, key){
+  return WEEKEND_ROOMS.includes(key) ? weekId(date) : ymd(date);
+}
+function isDone(date,key,person){
+  const period = periodFor(date,key);
+  return S.completions.some(c=>c.period===period && c.key===key && c.person===person);
+}
+function toggleDone(date,key,person){
+  const period = periodFor(date,key);
+  const idx = S.completions.findIndex(c=>c.period===period && c.key===key && c.person===person);
+  if(idx>=0){ S.completions.splice(idx,1); }
+  else{
+    S.completions.push({period,key,person,points:S.weights[key]||1,ts:Date.now(),wid:weekId(date)});
+  }
+  save();
+}
+
+/* ============================================================
+   RECETA DEL DÍA
+============================================================ */
+function recipeForDate(date){
+  const key = ymd(date);
+  if(S.recipePlan[key]){
+    const r = S.recipes.find(x=>x.id===S.recipePlan[key]);
+    if(r) return r;
+  }
+  if(!S.recipes.length) return null;
+  return S.recipes[((dayIndex(date))%S.recipes.length+S.recipes.length)%S.recipes.length];
+}
+
+/* ============================================================
+   RENDER
+============================================================ */
+let curDate = todayDate();
+
+function renderHeader(){
+  const d = todayDate();
+  const hour = new Date().getHours();
+  let saludo = "Buenas";
+  if(hour<12) saludo="Buen día"; else if(hour<20) saludo="Buenas tardes"; else saludo="Buenas noches";
+  const cook = personByIdx(cookIdx(d));
+  document.getElementById("greeting").innerHTML = saludo + ",<br><span class='name'>hoy cocina "+cook.name.split(" ")[0]+"</span>";
+  document.getElementById("dateRow").textContent = DIAS[d.getDay()]+" "+d.getDate()+" de "+MESES[d.getMonth()];
+}
+
+function avatar(person, extra=""){
+  return "<div class='avatar "+extra+"' style='background:"+person.color+"'>"+person.emoji+"</div>";
+}
+
+function renderHoy(){
+  const d = todayDate();
+  // receta
+  const r = recipeForDate(d);
+  const cook = personByIdx(cookIdx(d));
+  const hero = document.getElementById("recipeHero");
+  if(r){
+    hero.innerHTML =
+      "<div class='recipe-hero' style='background:linear-gradient(135deg,#2b3a3e,"+cook.color+")'>"+
+        "<div class='blob'></div>"+
+        "<div class='label'>La cena de hoy · "+r.emoji+"</div>"+
+        "<h2>"+r.nombre+"</h2>"+
+        "<div class='chef'>"+avatar(cook)+"<span>Cocina "+cook.name+" · "+(r.min||"–")+" min</span></div>"+
+        "<button class='change' onclick='openRecipePicker()'>Ver receta / cambiar →</button>"+
+      "</div>";
+  } else {
+    hero.innerHTML = "<div class='recipe-hero'><div class='label'>La cena de hoy</div><h2>Sin receta cargada</h2><button class='change' onclick=\"go('recetas')\">Agregar al recetario →</button></div>";
+  }
+  // tareas
+  const cont = document.getElementById("todayTasks");
+  cont.innerHTML = tasksForDate(d).map(key=>{
+    const pIdx = ((assignFor(d,key))%2+2)%2;
+    const person = S.people[pIdx];
+    const done = isDone(d,key,person.id);
+    const isRoom = WEEKEND_ROOMS.includes(key);
+    return "<div class='task "+(done?"done":"")+"'>"+
+      "<button class='task-check' onclick=\"hitTask('"+key+"','"+person.id+"')\">"+
+        "<svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'><path d='M5 13l4 4L19 7'/></svg></button>"+
+      "<div class='task-body'><div class='task-name'>"+TASK_EMOJI[key]+" "+TASK_LABELS[key]+
+        "<span class='pill-pts'>+"+(S.weights[key]||1)+"</span></div>"+
+        "<div class='task-sub'>"+(isRoom?"Tarea de fin de semana":"Le toca a "+person.name)+"</div></div>"+
+      "<button class='who' onclick=\"swapTask('"+key+"')\">"+avatar(person,"swap")+"</button>"+
+    "</div>";
+  }).join("");
+}
+
+function hitTask(key, personId){
+  const d = todayDate();
+  toggleDone(d,key,personId);
+  renderHoy();
+  renderBalance();
+  const done = isDone(d,key,personId);
+  if(done) toast("¡Listo! "+TASK_LABELS[key]+" ✓");
+}
+
+// Reasignar manualmente (si un día se dan vuelta los roles)
+const overrides = {}; // key -> forced idx (solo en memoria de la sesión visual)
+function swapTask(key){
+  const d = todayDate();
+  // si está hecha, no dejamos cambiar el asignado para no romper el registro
+  const cur = ((assignFor(d,key))%2+2)%2;
+  const other = S.people[1-cur];
+  // movemos la marca si estaba hecha por el actual
+  const curP = S.people[cur];
+  if(isDone(d,key,curP.id)){ toggleDone(d,key,curP.id); toggleDone(d,key,other.id); }
+  // override visual del asignado de hoy
+  manualToday[key] = other.id;
+  renderHoyWithManual();
+  toast("Ahora le toca a "+other.name);
+}
+// override manual del día (no persiste la rotación, solo el día visible)
+const manualToday = {};
+const _assignFor = assignFor;
+function renderHoyWithManual(){
+  // re-render respetando manualToday
+  const d = todayDate();
+  const cont = document.getElementById("todayTasks");
+  cont.innerHTML = tasksForDate(d).map(key=>{
+    let pIdx;
+    if(manualToday[key]){ pIdx = S.people.findIndex(p=>p.id===manualToday[key]); }
+    else { pIdx = ((assignFor(d,key))%2+2)%2; }
+    const person = S.people[pIdx];
+    const done = isDone(d,key,person.id);
+    const isRoom = WEEKEND_ROOMS.includes(key);
+    return "<div class='task "+(done?"done":"")+"'>"+
+      "<button class='task-check' onclick=\"hitTask('"+key+"','"+person.id+"')\">"+
+        "<svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'><path d='M5 13l4 4L19 7'/></svg></button>"+
+      "<div class='task-body'><div class='task-name'>"+TASK_EMOJI[key]+" "+TASK_LABELS[key]+
+        "<span class='pill-pts'>+"+(S.weights[key]||1)+"</span></div>"+
+        "<div class='task-sub'>"+(isRoom?"Tarea de fin de semana":"Le toca a "+person.name)+"</div></div>"+
+      "<button class='who' onclick=\"swapTask('"+key+"')\">"+avatar(person,"swap")+"</button>"+
+    "</div>";
+  }).join("");
+}
+
+function renderSemana(){
+  const today = todayDate();
+  // lunes de la semana actual
+  const dow = (today.getDay()+6)%7; // 0 = lunes
+  const monday = new Date(today); monday.setDate(today.getDate()-dow);
+  document.getElementById("weekLabel").textContent =
+    "Semana del "+monday.getDate()+" de "+MESES[monday.getMonth()];
+  let html="";
+  for(let i=0;i<7;i++){
+    const d=new Date(monday); d.setDate(monday.getDate()+i);
+    const isToday = ymd(d)===ymd(today);
+    const isWeekend = (d.getDay()===0||d.getDay()===6);
+    const tasks = tasksForDate(d);
+    const minis = tasks.map(key=>{
+      let pIdx = ((assignFor(d,key))%2+2)%2;
+      if(isToday && manualToday[key]) pIdx = S.people.findIndex(p=>p.id===manualToday[key]);
+      const person=S.people[pIdx];
+      const done=isDone(d,key,person.id);
+      return "<span class='mini "+(done?"done":"")+"'><span class='dot' style='background:"+person.color+"'>"+person.emoji+"</span>"+TASK_LABELS[key].replace("Limpiar la ","").replace("Limpiar el ","").replace("Lavar los ","")+"</span>";
+    }).join("");
+    html += "<div class='day-row "+(isToday?"today":"")+"'>"+
+      "<div class='day-head'><div class='day-name'>"+DIAS[d.getDay()]+" <small>"+d.getDate()+"</small></div>"+
+      (isWeekend?"<span class='day-tag tag-finde'>Finde</span>":"")+"</div>"+
+      "<div class='mini-tasks'>"+minis+"</div></div>";
+  }
+  document.getElementById("weekGrid").innerHTML=html;
+}
+
+function renderRecetas(){
+  const cont=document.getElementById("recipeList");
+  if(!S.recipes.length){ cont.innerHTML="<div class='empty'>Todavía no hay recetas. Agregá la primera 👇</div>"; return; }
+  cont.innerHTML=S.recipes.map(r=>
+    "<div class='recipe-item'>"+
+      "<div class='recipe-emoji'>"+r.emoji+"</div>"+
+      "<div class='recipe-info'><div class='nm'>"+r.nombre+"</div><div class='meta'>"+(r.min?r.min+" min · ":"")+(r.ing||"")+"</div></div>"+
+      "<button class='icon-btn' onclick=\"editRecipe('"+r.id+"')\">✎</button>"+
+    "</div>"
+  ).join("");
+}
+
+/* ===== BALANCE / SEESAW ===== */
+function currentWeekId(){ return weekId(todayDate()); }
+function weekScores(){
+  const wid=currentWeekId();
+  const sc={};
+  S.people.forEach(p=>sc[p.id]={pts:0, items:{}});
+  S.completions.filter(c=>c.wid===wid).forEach(c=>{
+    if(!sc[c.person]) return;
+    sc[c.person].pts += c.points;
+    sc[c.person].items[c.key]=(sc[c.person].items[c.key]||0)+c.points;
+  });
+  return sc;
+}
+function renderBalance(){
+  const sc=weekScores();
+  const A=S.people[0], B=S.people[1];
+  const pa=sc[A.id].pts, pb=sc[B.id].pts;
+  const total=pa+pb;
+  // ángulo de la balanza
+  let diff = total? (pa-pb)/Math.max(total,6) : 0;
+  let angle = Math.max(-14, Math.min(14, diff*16));
+  // SVG balanza
+  const cx=140, beamY=46, len=104, ph=66;
+  const lx=cx-len, rx=cx+len;
+  const rad=angle*Math.PI/180;
+  const lyy=beamY+Math.sin(rad)*len, ryy=beamY-Math.sin(rad)*len;
+  document.getElementById("seesaw").innerHTML=
+    "<svg viewBox='0 0 280 150' style='width:100%;height:100%'>"+
+      // mástil
+      "<rect x='137' y='52' width='6' height='80' rx='3' fill='#d9d4cb'/>"+
+      "<polygon points='120,134 160,134 140,108' fill='#d9d4cb'/>"+
+      // viga
+      "<g transform='rotate("+angle+" "+cx+" "+beamY+")'>"+
+        "<rect x='"+lx+"' y='"+(beamY-3)+"' width='"+(len*2)+"' height='6' rx='3' fill='#b9b2a6'/>"+
+        "<circle cx='"+cx+"' cy='"+beamY+"' r='7' fill='#8a8178'/>"+
+      "</g>"+
+      // cuerdas + platos
+      "<line x1='"+lx+"' y1='"+lyy+"' x2='"+lx+"' y2='"+(lyy+ph)+"' stroke='#c9c2b6' stroke-width='2'/>"+
+      "<line x1='"+rx+"' y1='"+ryy+"' x2='"+rx+"' y2='"+(ryy+ph)+"' stroke='#c9c2b6' stroke-width='2'/>"+
+      "<g transform='translate("+lx+","+(lyy+ph)+")'>"+
+        "<ellipse cx='0' cy='0' rx='30' ry='9' fill='"+A.color+"'/>"+
+        "<text x='0' y='5' font-size='15' text-anchor='middle'>"+A.emoji+"</text>"+
+        "<text x='0' y='26' font-size='13' font-weight='700' text-anchor='middle' fill='"+A.color+"'>"+pa+"</text>"+
+      "</g>"+
+      "<g transform='translate("+rx+","+(ryy+ph)+")'>"+
+        "<ellipse cx='0' cy='0' rx='30' ry='9' fill='"+B.color+"'/>"+
+        "<text x='0' y='5' font-size='15' text-anchor='middle'>"+B.emoji+"</text>"+
+        "<text x='0' y='26' font-size='13' font-weight='700' text-anchor='middle' fill='"+B.color+"'>"+pb+"</text>"+
+      "</g>"+
+    "</svg>";
+  // veredicto
+  let v;
+  if(total===0) v="Semana en blanco. <span>¡A arrancar!</span>";
+  else if(pa===pb) v="Empate perfecto. <span>50 y 50</span> 🤝";
+  else { const ahead = pa>pb?A:B, beh=pa>pb?B:A, gap=Math.abs(pa-pb);
+    v="<span>"+ahead.name.split(" ")[0]+"</span> va arriba por "+gap+" pts"; }
+  document.getElementById("verdict").innerHTML=v;
+  // scores
+  document.getElementById("scoreRow").innerHTML=[A,B].map((p,i)=>{
+    const pts=i===0?pa:pb;
+    return "<div class='score' style='border-color:"+p.color+"40'>"+
+      "<div class='who-name'>"+avatar(p)+p.name.split(" ")[0]+"</div>"+
+      "<div class='pts' style='color:"+p.color+"'>"+pts+" <small>pts</small></div></div>";
+  }).join("");
+  // breakdown
+  const allKeys=[...WEEKDAY_TASKS,...WEEKEND_ROOMS];
+  document.getElementById("breakdown").innerHTML=allKeys.map(key=>{
+    const a=sc[A.id].items[key]||0, b=sc[B.id].items[key]||0;
+    if(a===0&&b===0) return "";
+    return "<div class='breakdown-item'><span>"+TASK_EMOJI[key]+" "+TASK_LABELS[key]+"</span>"+
+      "<span><b style='color:"+A.color+"'>"+a+"</b> · <b style='color:"+B.color+"'>"+b+"</b></span></div>";
+  }).join("")||"<div class='empty'>Sin tareas completadas esta semana</div>";
+}
+
+/* ===== AJUSTES ===== */
+function renderAjustes(){
+  // personas
+  document.getElementById("peopleCfg").innerHTML=S.people.map((p,i)=>
+    "<div class='field' style='margin-top:"+(i?16:0)+"'>"+
+      "<label>"+(i===0?"Persona 1":"Persona 2")+"</label>"+
+      "<input value='"+p.name.replace(/'/g,"&#39;")+"' onchange=\"setName("+i+",this.value)\" />"+
+      "<div class='color-dots'>"+COLORS.map(c=>"<button class='cdot "+(c===p.color?"sel":"")+"' style='background:"+c+"' onclick=\"setColor("+i+",'"+c+"')\"></button>").join("")+"</div>"+
+    "</div>"
+  ).join("");
+  // quién arranca
+  document.getElementById("startCfg").innerHTML=S.people.map(p=>
+    "<label style='display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer'>"+
+      "<input type='radio' name='starts' "+(S.whoStarts===p.id?"checked":"")+" onchange=\"setStarts('"+p.id+"')\" style='width:auto'/>"+
+      avatar(p)+" "+p.name+"</label>"
+  ).join("");
+  // pesos
+  document.getElementById("weightsCfg").innerHTML=[...WEEKDAY_TASKS,...WEEKEND_ROOMS].map(key=>
+    "<div class='weight-row'><span>"+TASK_EMOJI[key]+" "+TASK_LABELS[key]+"</span>"+
+      "<div class='stepper'><button onclick=\"chW('"+key+"',-1)\">−</button>"+
+      "<span class='v' id='w-"+key+"'>"+(S.weights[key]||1)+"</span>"+
+      "<button onclick=\"chW('"+key+"',1)\">+</button></div></div>"
+  ).join("");
+  renderNotif();
+}
+function setName(i,v){ S.people[i].name=v.trim()||S.people[i].name; save(); renderHeader(); }
+function setColor(i,c){ S.people[i].color=c; save(); renderAjustes(); renderAll(); }
+function setStarts(id){ S.whoStarts=id; save(); renderAll(); }
+function chW(key,delta){ S.weights[key]=Math.max(1,Math.min(9,(S.weights[key]||1)+delta)); document.getElementById("w-"+key).textContent=S.weights[key]; save(); }
+
+/* ============================================================
+   RECETAS — modal
+============================================================ */
+function openRecipePicker(){
+  const d=todayDate();
+  const cur=recipeForDate(d);
+  const m=document.getElementById("modal");
+  m.innerHTML="<h3>La cena de hoy</h3><div class='modal-sub'>Elegí qué se cocina</div>"+
+    "<div class='pick-list'>"+S.recipes.map(r=>
+      "<div class='pick "+(cur&&cur.id===r.id?"sel":"")+"' onclick=\"pickRecipe('"+r.id+"')\">"+
+        "<div class='recipe-emoji'>"+r.emoji+"</div>"+
+        "<div class='recipe-info'><div class='nm'>"+r.nombre+"</div><div class='meta'>"+(r.min?r.min+" min":"")+"</div></div></div>"
+    ).join("")+"</div>"+
+    (cur? "<div style='margin-top:14px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:13px'>"+
+      "<b>Ingredientes:</b> "+(cur.ing||"–")+"<br><br><b>Preparación:</b> "+(cur.pasos||"–")+"</div>":"")+
+    "<button class='btn ghost' onclick='closeModal()'>Cerrar</button>";
+  openModal();
+}
+function pickRecipe(id){ S.recipePlan[ymd(todayDate())]=id; save(); closeModal(); renderHoy(); toast("Receta del día actualizada"); }
+
+function editRecipe(id){
+  const r = id? S.recipes.find(x=>x.id===id) : {id:"",emoji:"🍽️",nombre:"",min:"",ing:"",pasos:""};
+  const isNew=!id;
+  const m=document.getElementById("modal");
+  m.innerHTML="<h3>"+(isNew?"Nueva receta":"Editar receta")+"</h3>"+
+    "<div class='field'><label>Emoji</label><input id='f-emoji' value='"+r.emoji+"' maxlength='2'/></div>"+
+    "<div class='field'><label>Nombre</label><input id='f-nombre' value='"+r.nombre.replace(/'/g,"&#39;")+"' placeholder='Ej: Milanesas con puré'/></div>"+
+    "<div class='field'><label>Minutos</label><input id='f-min' type='number' value='"+(r.min||"")+"' placeholder='45'/></div>"+
+    "<div class='field'><label>Ingredientes</label><textarea id='f-ing' placeholder='Separados por coma'>"+(r.ing||"")+"</textarea></div>"+
+    "<div class='field'><label>Preparación</label><textarea id='f-pasos'>"+(r.pasos||"")+"</textarea></div>"+
+    "<button class='btn' onclick=\"saveRecipe('"+(id||"")+"')\">Guardar</button>"+
+    (isNew?"":"<button class='btn ghost' onclick=\"delRecipe('"+id+"')\" style='color:#b54b4b'>Eliminar receta</button>")+
+    "<button class='btn ghost' onclick='closeModal()'>Cancelar</button>";
+  openModal();
+}
+function saveRecipe(id){
+  const get=x=>document.getElementById(x).value.trim();
+  const nombre=get("f-nombre"); if(!nombre){ toast("Poné un nombre"); return; }
+  const data={emoji:get("f-emoji")||"🍽️", nombre, min:parseInt(get("f-min"))||"", ing:get("f-ing"), pasos:get("f-pasos")};
+  if(id){ const r=S.recipes.find(x=>x.id===id); Object.assign(r,data); }
+  else{ data.id="r"+Date.now(); S.recipes.push(data); }
+  save(); closeModal(); renderRecetas(); renderHoy(); toast("Receta guardada");
+}
+function delRecipe(id){
+  S.recipes=S.recipes.filter(x=>x.id!==id);
+  Object.keys(S.recipePlan).forEach(k=>{ if(S.recipePlan[k]===id) delete S.recipePlan[k]; });
+  save(); closeModal(); renderRecetas(); renderHoy(); toast("Receta eliminada");
+}
+
+/* ============================================================
+   NAV / MODAL / TOAST
+============================================================ */
+function go(view){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+view).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
+  window.scrollTo(0,0);
+  if(view==="balance") renderBalance();
+  if(view==="ajustes") renderAjustes();
+  if(view==="semana") renderSemana();
+}
+document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>go(b.dataset.view)));
+document.getElementById("addRecipeBtn").addEventListener("click",()=>editRecipe(""));
+document.getElementById("resetBtn").addEventListener("click",()=>{
+  if(confirm("¿Borrar todo y empezar de cero? No se puede deshacer.")){
+    S=defaultState(); save(); Object.keys(manualToday).forEach(k=>delete manualToday[k]); renderAll(); go("hoy"); toast("Todo reiniciado");
+  }
+});
+
+function openModal(){ document.getElementById("modalBg").classList.add("open"); }
+function closeModal(){ document.getElementById("modalBg").classList.remove("open"); }
+document.getElementById("modalBg").addEventListener("click",e=>{ if(e.target.id==="modalBg") closeModal(); });
+
+let toastT;
+function toast(msg){
+  const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1900);
+}
+
+/* ============================================================
+   PWA + NOTIFICACIONES (Paso 1: instalar + permiso + prueba local)
+   En el Paso 2 la suscripción se sube a Supabase.
+============================================================ */
+const VAPID_PUBLIC = "BJhNJf94_jY3M_4-tUH3DNwyBw9ThP2qeF7kNukiH6z1QD1IvojPiwvOngkipfdvVCH0bQvbnOrRikQt_XdBfG0";
+
+function urlB64ToUint8Array(b64){
+  const pad="=".repeat((4-b64.length%4)%4);
+  const base=(b64+pad).replace(/-/g,"+").replace(/_/g,"/");
+  const raw=atob(base); const arr=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i);
+  return arr;
+}
+function isStandalone(){
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true;
+}
+function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+
+let swReg = null;
+async function registerSW(){
+  if(!("serviceWorker" in navigator)) return;
+  try{ swReg = await navigator.serviceWorker.register("/sw.js"); }
+  catch(e){ console.log("SW no registrado (¿estás en el preview? funciona al deployar):", e.message); }
+}
+
+function renderNotif(){
+  const el = document.getElementById("notifCfg");
+  if(!el) return;
+  const supported = ("Notification" in window) && ("serviceWorker" in navigator) && ("PushManager" in window);
+
+  // iPhone sin instalar: hay que agregar a inicio
+  if(isIOS() && !isStandalone()){
+    el.innerHTML = "<div style='font-size:14px;line-height:1.5'>📲 <b>En iPhone hay que instalar la app primero.</b><br>"+
+      "Tocá el botón <b>Compartir</b> de Safari, elegí <b>Agregar a inicio</b>, y después abrí <b>Casa</b> desde el ícono. "+
+      "Recién ahí vas a poder activar las notificaciones.</div>";
+    return;
+  }
+  if(!supported){
+    el.innerHTML = "<div style='font-size:14px;color:var(--muted)'>Este navegador no soporta notificaciones push.</div>";
+    return;
+  }
+
+  const perm = Notification.permission;
+  const mine = S.thisDevice ? S.people.find(p=>p.id===S.thisDevice) : null;
+
+  // elegir de quién es el celu
+  let who = "<div style='font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px'>¿De quién es este celular?</div>"+
+    "<div style='display:flex;gap:8px;margin-bottom:14px'>"+S.people.map(p=>
+      "<button onclick=\"setDevice('"+p.id+"')\" style='flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:12px;border:2px solid "+(S.thisDevice===p.id?p.color:"var(--line)")+";background:"+(S.thisDevice===p.id?p.color+"14":"var(--surface)")+";font-weight:600'>"+
+      "<span style='width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:"+p.color+";color:#fff'>"+p.emoji+"</span>"+p.name.split(" ")[0]+"</button>"
+    ).join("")+"</div>";
+
+  let action;
+  if(perm==="granted" && S.pushSub){
+    action = "<div style='display:flex;align-items:center;gap:8px;color:var(--done);font-weight:600;font-size:14px;margin-bottom:12px'>✓ Notificaciones activadas"+(mine?" para "+mine.name.split(" ")[0]:"")+"</div>"+
+      "<button class='btn ghost' onclick='testNotif()' style='margin-top:0'>Probar notificación</button>";
+  } else if(perm==="denied"){
+    action = "<div style='font-size:14px;color:#b54b4b'>Bloqueaste las notificaciones. Activálas en los ajustes del navegador/celular para esta app.</div>";
+  } else {
+    action = "<button class='btn' onclick='enableNotifs()' style='margin-top:0'>Activar notificaciones</button>";
+  }
+  el.innerHTML = who + action;
+}
+
+function setDevice(id){ S.thisDevice=id; save(); renderNotif(); }
+
+async function enableNotifs(){
+  if(!S.thisDevice){ toast("Primero elegí de quién es el celu"); return; }
+  try{
+    const perm = await Notification.requestPermission();
+    if(perm!=="granted"){ toast("No diste permiso"); renderNotif(); return; }
+    if(!swReg) await registerSW();
+    if(!swReg){ toast("Activá esto en la app instalada / deployada"); return; }
+    const sub = await swReg.pushManager.subscribe({
+      userVisibleOnly:true,
+      applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC)
+    });
+    S.pushSub = sub.toJSON();   // Paso 2: esto se sube a Supabase
+    save();
+    toast("¡Notificaciones activadas! 🔔");
+    renderNotif();
+  }catch(e){ console.log(e); toast("No se pudo activar: "+e.message); }
+}
+
+async function testNotif(){
+  try{
+    if(!swReg) await registerSW();
+    if(swReg){
+      const cook = personByIdx(cookIdx(todayDate()));
+      const r = recipeForDate(todayDate());
+      await swReg.showNotification("Casa en Equipo 🍳", {
+        body: "Hoy cocina "+cook.name.split(" ")[0]+(r?" — "+r.nombre:""),
+        icon:"/icons/icon-192.png", badge:"/icons/icon-192.png"
+      });
+    } else {
+      new Notification("Casa en Equipo 🍳", { body:"Notificación de prueba" });
+    }
+  }catch(e){ toast("No se pudo mostrar: "+e.message); }
+}
+
+registerSW();
+
+function renderAll(){ renderHeader(); renderHoy(); renderSemana(); renderRecetas(); renderBalance(); }
+renderAll();
+</script>
+</body>
+</html>
